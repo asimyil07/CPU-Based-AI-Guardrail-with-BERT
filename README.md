@@ -1,596 +1,231 @@
-# CPU-Based AI Guardrail System
+# HomayShield: CPU-Based Guardrail for AI Security
 
-## Overview
+HomayShield is a lightweight CPU-based guardrail designed to protect AI systems against malicious, adversarial, and suspicious inputs in **Turkish and English**.
 
-This project is a high-performance CPU-based AI guardrail system designed to detect and block malicious prompts targeting Large Language Models (LLMs).
+Unlike modern guardrail systems that rely heavily on Large Language Models (LLMs), HomayShield focuses on practical deployment for companies that cannot afford GPU-heavy infrastructure.
 
-The architecture was specifically designed for:
+---
 
-* Low-latency inference
-* CPU-only deployment
-* Enterprise/SOC environments
-* Air-gapped systems
-* Scalable inference pipelines
-* Real-time prompt inspection
+# Why This Project?
 
-The system focuses heavily on:
+As AI adoption increases, companies need guardrails to protect:
+
+* LLM applications
+* Chatbots
+* AI agents
+* Web applications
+* Internal AI assistants
+
+Modern guardrails often use LLMs for security analysis.
+
+Examples:
 
 * Prompt injection detection
-* Jailbreak prevention
-* Instruction override detection
-* Data exfiltration prevention
-* Obfuscation attack detection
-* Multi-language attack analysis
+* Jailbreak detection
+* Adversarial prompt detection
+* Malicious instruction filtering
 
-The guardrail currently supports:
+LLM-based guardrails are powerful.
 
-* Turkish prompts
-* English prompts
-* Mixed Turkish-English prompts
+However, they have major challenges:
+
+* High infrastructure cost
+* GPU dependency
+* High inference latency
+* Complex deployment
+* Expensive scaling
+
+Many companies—especially small and mid-sized organizations—cannot deploy GPU-based security systems.
+
+This creates a major security gap.
 
 ---
 
-# Architecture
+# HomayShield Goal
 
-The system follows a multi-stage pipeline architecture.
+HomayShield aims to provide a practical alternative:
+
+* CPU-based inference
+* No GPU required in production
+* Low latency
+* Easy deployment
+* Lower cost
+* Strong baseline security
+
+This project is designed for organizations that need AI security but cannot deploy expensive LLM guardrails.
+
+---
+
+# Important Note
+
+HomayShield is **not intended to replace LLM-based guardrails**.
+
+LLM guardrails generally provide:
+
+* deeper reasoning
+* stronger contextual understanding
+* better zero-day attack detection
+
+LLM guardrails are usually more powerful.
+
+However, HomayShield offers an important tradeoff:
+
+* lower accuracy than LLM guardrails
+* significantly lower cost
+* much easier deployment
+
+For many companies, practical deployment matters more than perfect detection.
+
+A CPU-based guardrail is better than having no guardrail.
+
+---
+
+# Core Idea
+
+HomayShield uses a shared encoder architecture.
+
+The encoder runs only once.
+
+The same embedding is reused for:
+
+* Semantic similarity detection
+* Classifier prediction
+
+Architecture:
 
 ```text
-                    +----------------+
-User Prompt ------> | Language Detect|
-                    +----------------+
-                             |
-                             v
-                  +--------------------+
-                  | Semantic Embedding |
-                  +--------------------+
-                             |
-                   Threshold Evaluation
-                             |
-              +--------------+--------------+
-              |                             |
-              v                             v
-          SAFE PASS                 Suspicious Input
-                                            |
-                                            v
-                                +-------------------+
-                                | BERT Classifier   |
-                                +-------------------+
-                                            |
-                                            v
-                                    Final Decision
+Input
+  ↓
+Language Detector (TR / EN only)
+  ↓
+Shared Encoder (run once)
+  ↓
+Embedding
+  ├── Semantic Similarity Engine
+  └── Classifier Head
 ```
+
+This design minimizes compute cost.
+
+Traditional systems may run:
+
+* embedding model
+* classifier model
+* policy model
+
+HomayShield avoids this by optimizing around a single encoder.
 
 ---
 
-# Detection Pipeline
+# Why Shared Encoder?
 
-## 1. Language Detection
+The main optimization is simple:
 
-The first stage identifies the language of the incoming prompt.
+> Run encoder once, use output twice.
 
-Supported languages:
+This provides:
 
-* English
+* lower CPU usage
+* faster inference
+* lower memory consumption
+* easier scaling
+
+This makes HomayShield suitable for:
+
+* on-prem environments
+* edge deployments
+* CPU-only servers
+* enterprise AI pipelines
+
+---
+
+# Supported Languages
+
+Currently supported:
+
 * Turkish
-* Mixed English/Turkish
+* English
 
-Language detection improves:
+Inference begins with language detection.
 
-* Embedding quality
-* Classification accuracy
-* Token interpretation
-* Context understanding
+If input language is not:
 
----
+* Turkish (`tr`)
+* English (`en`)
 
-## 2. Semantic Embedding Layer
-
-After language detection, the prompt enters the semantic embedding pipeline.
-
-The embedding system performs:
-
-* Semantic similarity analysis
-* Contextual representation
-* Threat proximity scoring
-* Vector-based anomaly evaluation
-
-If the semantic similarity threshold is not exceeded, the request is considered safe and bypasses the expensive classification stage.
-
-This significantly reduces:
-
-* CPU utilization
-* Inference latency
-* Unnecessary classifier execution
-
-Only suspicious prompts are forwarded to the classifier model.
+Input can be rejected or skipped.
 
 ---
 
-## 3. BERT Classifier
+# Detection Strategy
 
-The classifier stage uses a BERT-based architecture selected after extensive benchmark testing.
-
-The model is responsible for:
-
-* Attack classification
-* Threat categorization
-* Injection detection
-* Behavioral analysis
-* Risk labeling
-
-The BERT architecture was chosen because it provided the best balance between:
-
-* Accuracy
-* CPU performance
-* Latency
-* Stability
-* Multilingual contextual understanding
-
-Benchmark results and performance metrics will be shared in a separate publication.
+HomayShield combines two detection methods.
 
 ---
 
-# Shared Transformer Pipeline Design
+## 1. Semantic Detection
 
-One of the most important architectural decisions was using a shared transformer pipeline between semantic embedding generation and classifier inference.
+Uses embedding similarity against known attack embeddings.
 
-Both components share the same preprocessing and transformer backbone until the final separation stage.
+Good for detecting:
 
-This means:
-
-* Same tokenizer
-* Same embedding layer
-* Same transformer encoder
-* Same attention mechanism
-* Same contextual understanding path
-
-The separation only occurs at the output stage.
-
-| Step                | BERT Classifier  | Semantic Embedding |
-| ------------------- | ---------------- | ------------------ |
-| Tokenization        | Same             | Same               |
-| Embedding Layer     | Same             | Same               |
-| Transformer Encoder | Same             | Same               |
-| Pooling             | CLS              | Mean / CLS         |
-| Output Layer        | Linear + Softmax | None               |
-| Output              | Label            | Vector             |
-
-This architecture provides several advantages:
-
-## Advantages of Shared Pipeline
-
-### Consistent Semantic Understanding
-
-Both systems interpret prompts using identical contextual representations.
-
-### Reduced Computational Overhead
-
-The transformer path is reused efficiently.
-
-### Lower Memory Usage
-
-Shared architecture minimizes duplicated model components.
-
-### Better Detection Stability
-
-Embedding similarity and classifier outputs remain semantically aligned.
-
-### Improved CPU Efficiency
-
-Avoiding separate pipelines significantly reduces resource consumption.
+* similar attacks
+* adversarial patterns
+* prompt injection variants
+* semantic anomalies
 
 ---
 
-# Training Dataset
+## 2. Classifier Detection
 
-The models were trained using approximately 600,000 prompts.
+Classifier predicts attack probability.
 
-The dataset includes:
+Good for detecting:
 
-* English prompts
-* Turkish prompts
-* Mixed-language prompts
-* Benign prompts
-* Adversarial prompts
-* Multi-turn attack structures
-
-The dataset was intentionally designed to simulate real-world enterprise attacks targeting LLM systems.
+* known attack patterns
+* previously learned malicious behavior
 
 ---
 
-# Dataset Categories
+# Inference Modes
 
-## 1. Direct Prompt Injection (Jailbreaking)
+HomayShield supports 3 decision modes.
 
-Detects attempts to bypass AI safety restrictions directly.
+### Option 1 — OR Logic
 
-Includes:
-
-* DAN attacks
-* Developer mode prompts
-* Emotional manipulation
-* Threat-based prompts
-* Research-purpose deception
-
----
-
-## 2. Instruction Overriding / Goal Hijacking
-
-Detects attempts to replace or override system instructions.
-
-Examples:
-
-* "Ignore previous instructions"
-* "You are now another AI"
-* Hidden override payloads
-
----
-
-## 3. System Prompt Leakage Attempts
-
-Designed to prevent internal prompt exposure.
-
-Includes:
-
-* System prompt extraction
-* Hidden instruction requests
-* Config leakage attempts
-* Structured extraction payloads
-
----
-
-## 4. Data Exfiltration / Sensitive Information Extraction
-
-Critical for enterprise and SOC environments.
-
-Includes:
-
-* Credential requests
-* Internal log extraction
-* API key harvesting
-* Database dump requests
-* Memory disclosure attempts
-
----
-
-## 5. Obfuscation & Encoding Attacks
-
-Designed to bypass traditional keyword filtering.
-
-Includes:
-
-* Base64 encoding
-* Hex encoding
-* Unicode homoglyphs
-* Zero-width characters
-* Typoglycemia
-* Mixed obfuscation methods
-
----
-
-## 6. Indirect Prompt Injection (RAG Attacks)
-
-Focuses on malicious external-context injection.
-
-Includes:
-
-* HTML hidden payloads
-* Markdown injection
-* PDF poisoning
-* Email-based payloads
-* Invisible instruction embedding
-
----
-
-## 7. Payload Splitting & Reconstruction Attacks
-
-Detects fragmented malicious logic.
-
-Includes:
-
-* Variable reconstruction
-* Multi-stage prompt building
-* Puzzle-based attacks
-* Distributed payload assembly
-
----
-
-## 8. Multi-Turn Conversation Attacks
-
-One of the most critical attack classes.
-
-Includes:
-
-* Trust-building attacks
-* Gradual escalation
-* Delayed instruction override
-* Roleplay escalation chains
-
-This dataset includes sequence-based structures instead of isolated prompts.
-
----
-
-## 9. Contextual Trust Exploitation
-
-Detects fake authority or legitimacy claims.
-
-Examples:
-
-* "I am admin"
-* "Authorized request"
-* "Internal security audit"
-
-These attacks are especially dangerous in enterprise environments.
-
----
-
-## 10. Roleplay-Based Attacks
-
-Attempts to bypass restrictions using fictional scenarios.
-
-Includes:
-
-* Simulation environments
-* Fictional universes
-* Pretend-role prompts
-* Story-based jailbreaks
-
----
-
-## 11. Tool / Function Abuse Prompts
-
-Designed for LLM systems integrated with tools or agents.
-
-Includes:
-
-* Hidden tool invocation
-* Unauthorized API calls
-* Function execution attempts
-* Agent manipulation
-
----
-
-## 12. Code Injection / Execution Prompts
-
-Detects malicious code execution intent.
-
-Includes:
-
-* Shell payloads
-* Python execution prompts
-* SQL injection patterns
-* Remote execution requests
-
----
-
-## 13. Cross-Language / Multilingual Attacks
-
-Targets multilingual evasion techniques.
-
-Includes:
-
-* English + Turkish mixed prompts
-* Multi-language instruction mixing
-* Slang/formal language blending
-
----
-
-## 14. Adversarial Noise & Perturbation
-
-Attempts to break pattern-based detection systems.
-
-Includes:
-
-* Typo attacks
-* Random spacing
-* Symbol injection
-* Broken grammar structures
-
----
-
-## 15. Long Context Attacks
-
-Hides malicious payloads inside extremely long prompts.
-
-Includes:
-
-* 1K–10K token inputs
-* Hidden mid-context attacks
-* Payloads embedded in noise
-
----
-
-## 16. Ambiguous / Borderline Inputs
-
-Designed to reduce false positives.
-
-Includes:
-
-* Academic discussions
-* Security research questions
-* Neutral attack discussions
-
----
-
-## 17. Benign Dataset
-
-Contains normal and safe prompts.
-
-Includes:
-
-* Business requests
-* Technical questions
-* Daily conversations
-* General assistance prompts
-
----
-
-## 18. Hard Negative Samples
-
-One of the most important dataset categories for improving precision.
-
-Examples:
-
-* "Explain prompt injection"
-* "Translate ignore rules"
-* Fictional security discussions
-
-These samples look malicious syntactically but are semantically safe.
-
----
-
-## 19. Policy Boundary Cases
-
-Designed to teach nuanced decision-making.
-
-Includes:
-
-* Ethical discussions
-* Gray-area prompts
-* Partial policy violations
-
----
-
-## 20. Output-Based Attacks
-
-Focuses on response-level manipulation.
-
-Includes:
-
-* Hidden message embedding
-* Invisible output instructions
-* Encoded response payloads
-
----
-
-## 21. Self-Referential / Meta Attacks
-
-Attempts to confuse reasoning systems.
-
-Includes:
-
-* Recursive prompts
-* Logic loops
-* Self-analysis traps
-
----
-
-## 22. Multi-Modal Injection (Future Scope)
-
-Future-proof category for multimodal systems.
-
-Planned support includes:
-
-* OCR-based injection
-* Image-hidden prompts
-* Audio command injection
-
----
-
-## 23. Behavioral Labels
-
-Each dataset sample contains structured behavioral metadata.
-
-Example:
-
-```json
-{
-  "label": "PROMPT_INJECTION",
-  "subtype": "INSTRUCTION_OVERRIDE",
-  "difficulty": "hard",
-  "language": "mixed",
-  "multi_turn": false
-}
+```python
+if semantic_score >= semantic_threshold or classifier_score >= classifier_threshold:
+    ATTACK
+else:
+    NORMAL
 ```
 
-These labels improve:
+---
 
-* Fine-grained classification
-* Threat analytics
-* Benchmarking
-* Error analysis
-* Future model tuning
+### Option 2 — Weighted Fusion
+
+```python
+fusion_score = semantic_weight * semantic_score + classifier_weight * classifier_score
+```
 
 ---
 
-# Training & Inference Consistency
+### Option 3 — Single Signal
 
-One of the core design principles of the project is maintaining identical processing logic during both:
+Use either:
 
-* Model training
-* Real-time inference
-
-The same preprocessing pipeline is reused end-to-end.
-
-This includes:
-
-* Tokenization
-* Attention flow
-* Transformer encoding
-* Embedding generation
-* Pooling strategy
-
-This consistency improves:
-
-* Stability
-* Prediction reliability
-* Semantic alignment
-* Generalization quality
-
-## Introduction
-
-As AI systems become more widely deployed, guardrails are becoming a critical component of reliable and secure inference pipelines. Most modern guardrail solutions heavily rely on GPUs or large external services, which can increase infrastructure costs and deployment complexity.
-
-In this project, I focused on building a lightweight **CPU-based guardrail system** designed to work efficiently even in resource-constrained environments.
-
-The goal of this article is to explain:
-
-* Why CPU-based guardrails matter
-* The architecture of the system
-* Design decisions and tradeoffs
-* Performance considerations
-* Future improvements
+* semantic only
+  or
+* classifier only
 
 ---
 
-# Why CPU-Based Guardrails?
+# Key Philosophy
 
-Many AI deployments already dedicate GPUs entirely to model inference. Running additional safety or filtering pipelines on GPUs can:
+HomayShield is built around one belief:
 
-* Increase latency
-* Increase infrastructure cost
-* Compete with inference workloads
-* Reduce scalability
+> Security should not be limited to companies with GPU infrastructure.
 
-A CPU-based guardrail system provides several advantages:
+AI security should be practical, deployable, and accessible.
 
-## Advantages
-
-### 1. Resource Isolation
-
-Guardrails operate independently from GPU inference workloads.
-
-### 2. Lower Infrastructure Cost
-
-CPU workloads are generally cheaper and easier to scale horizontally.
-
-### 3. Better Deployment Flexibility
-
-The system can run:
-
-* On-premise
-* Edge devices
-* Virtual machines
-* Kubernetes sidecars
-* Air-gapped environments
-
-### 4. Improved Stability
-
-Even if GPU inference becomes overloaded, the guardrail layer can continue functioning.
-
-
-# Author
-
-ASIM YILDIZ
-
-Security Researcher | Incident Response | AI & Security Engineering
+Even without LLMs, strong CPU-based guardrails can provide meaningful protection.
