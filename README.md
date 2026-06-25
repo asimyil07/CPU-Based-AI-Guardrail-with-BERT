@@ -1,58 +1,75 @@
-# HomayShield: CPU-Based Guardrail for AI Security
+# HomayShield: CPU-Based AI Guardrail for Turkish & English Security Filtering
 
-HomayShield is a lightweight CPU-based guardrail designed to protect AI systems against malicious, adversarial, and suspicious inputs in **Turkish and English**.
+HomayShield is a lightweight **CPU-based AI guardrail system** designed to detect malicious, adversarial, and suspicious inputs targeting AI systems.
 
-Unlike modern guardrail systems that rely heavily on Large Language Models (LLMs), HomayShield focuses on practical deployment for companies that cannot afford GPU-heavy infrastructure.
+The project focuses on providing practical AI security for organizations that **cannot deploy GPU-heavy guardrail solutions**.
+
+Supported languages:
+
+* Turkish
+* English
+* Mixed Turkish-English prompts
 
 ---
 
-# Why This Project?
+# Why HomayShield?
 
-As AI adoption increases, companies need guardrails to protect:
+As AI adoption grows, organizations increasingly deploy:
 
 * LLM applications
 * Chatbots
 * AI agents
-* Web applications
+* RAG systems
 * Internal AI assistants
+* Web-integrated AI pipelines
 
-Modern guardrails often use LLMs for security analysis.
+These systems introduce new attack surfaces.
 
-Examples:
+Examples include:
 
-* Prompt injection detection
-* Jailbreak detection
-* Adversarial prompt detection
-* Malicious instruction filtering
+* Prompt injection
+* Jailbreak attacks
+* Instruction override
+* Data exfiltration
+* Tool abuse
+* Indirect prompt injection
 
-LLM-based guardrails are powerful.
+Modern guardrails often rely on LLM-based security analysis.
 
-However, they have major challenges:
+These systems are powerful, but they introduce major operational challenges:
 
 * High infrastructure cost
 * GPU dependency
 * High inference latency
-* Complex deployment
 * Expensive scaling
+* Complex deployment
 
-Many companies—especially small and mid-sized organizations—cannot deploy GPU-based security systems.
+Many small and mid-sized organizations cannot afford dedicated GPU infrastructure for security layers.
 
 This creates a major security gap.
 
 ---
 
-# HomayShield Goal
+# Project Goal
 
-HomayShield aims to provide a practical alternative:
+HomayShield aims to provide a practical alternative.
+
+Main objectives:
 
 * CPU-based inference
-* No GPU required in production
 * Low latency
-* Easy deployment
-* Lower cost
-* Strong baseline security
+* No GPU requirement in production
+* Easy enterprise deployment
+* Lower operational cost
+* Strong baseline AI security
 
-This project is designed for organizations that need AI security but cannot deploy expensive LLM guardrails.
+HomayShield is designed for:
+
+* SOC environments
+* Enterprise AI systems
+* Air-gapped systems
+* On-prem deployments
+* CPU-only environments
 
 ---
 
@@ -60,33 +77,35 @@ This project is designed for organizations that need AI security but cannot depl
 
 HomayShield is **not intended to replace LLM-based guardrails**.
 
-LLM guardrails generally provide:
+LLM guardrails typically provide:
 
 * deeper reasoning
-* stronger contextual understanding
-* better zero-day attack detection
+* better contextual understanding
+* stronger zero-day detection
+* more adaptive behavior
 
-LLM guardrails are usually more powerful.
+In most scenarios, LLM-based guardrails are more powerful.
 
 However, HomayShield offers an important tradeoff:
 
-* lower accuracy than LLM guardrails
-* significantly lower cost
+* lower detection capability than advanced LLM guardrails
+* significantly lower infrastructure cost
 * much easier deployment
+* much faster CPU inference
 
-For many companies, practical deployment matters more than perfect detection.
+For many organizations, deployability matters.
 
-A CPU-based guardrail is better than having no guardrail.
+> A CPU-based guardrail is better than having no guardrail.
 
 ---
 
-# Core Idea
+# Core Architecture
 
-HomayShield uses a shared encoder architecture.
+HomayShield is built around one key principle:
 
-The encoder runs only once.
+> Run encoder once. Use output twice.
 
-The same embedding is reused for:
+A single shared encoder generates embeddings used by both:
 
 * Semantic similarity detection
 * Classifier prediction
@@ -94,104 +113,114 @@ The same embedding is reused for:
 Architecture:
 
 ```text
-Input
-  ↓
-Language Detector (TR / EN only)
-  ↓
-Shared Encoder (run once)
-  ↓
+Input Prompt
+    ↓
+Language Detector (TR / EN)
+    ↓
+Shared Encoder (Single Pass)
+    ↓
 Embedding
-  ├── Semantic Similarity Engine
-  └── Classifier Head
+ ┌───────────────┴───────────────┐
+ ↓                               ↓
+Semantic Similarity         Classifier Head
+ ↓                               ↓
+Semantic Score              Classifier Score
+          ↓
+     Decision Engine
+          ↓
+   ATTACK / NORMAL
 ```
 
-This design minimizes compute cost.
-
-Traditional systems may run:
-
-* embedding model
-* classifier model
-* policy model
-
-HomayShield avoids this by optimizing around a single encoder.
+This architecture minimizes compute cost and reduces latency.
 
 ---
 
 # Why Shared Encoder?
 
-The main optimization is simple:
+Traditional guardrail systems may run:
 
-> Run encoder once, use output twice.
+* Language model
+* Embedding model
+* Classifier model
+* Policy model
 
-This provides:
+This increases:
 
-* lower CPU usage
-* faster inference
-* lower memory consumption
-* easier scaling
+* CPU/GPU utilization
+* latency
+* memory consumption
+* infrastructure complexity
 
-This makes HomayShield suitable for:
+HomayShield avoids this by sharing the encoder.
 
-* on-prem environments
-* edge deployments
-* CPU-only servers
-* enterprise AI pipelines
+Advantages:
+
+* Lower CPU usage
+* Faster inference
+* Lower memory footprint
+* Better scalability
+* Consistent semantic representation
 
 ---
 
 # Supported Languages
 
-Currently supported:
-
-* Turkish
-* English
-
-Inference begins with language detection.
-
-If input language is not:
+Current supported languages:
 
 * Turkish (`tr`)
 * English (`en`)
 
-Input can be rejected or skipped.
+Inference begins with language detection.
+
+If input language is unsupported:
+
+* Reject
+  or
+* Skip evaluation
 
 ---
 
 # Detection Strategy
 
-HomayShield combines two detection methods.
+HomayShield combines two detection mechanisms.
 
 ---
 
-## 1. Semantic Detection
+## 1) Semantic Detection
 
-Uses embedding similarity against known attack embeddings.
+Semantic similarity compares incoming prompt embeddings against known malicious attack embeddings.
 
-Good for detecting:
+Useful for detecting:
 
 * similar attacks
-* adversarial patterns
 * prompt injection variants
+* jailbreak attempts
 * semantic anomalies
+* adversarial patterns
 
 ---
 
-## 2. Classifier Detection
+## 2) Classifier Detection
 
-Classifier predicts attack probability.
+Classifier predicts attack probability using shared embeddings.
 
-Good for detecting:
+Useful for detecting:
 
 * known attack patterns
-* previously learned malicious behavior
+* learned malicious behavior
+* structured adversarial prompts
 
 ---
 
 # Inference Modes
 
-HomayShield supports 3 decision modes.
+HomayShield supports 3 inference strategies.
 
-### Option 1 — OR Logic
+---
+
+## Option 1 — OR Logic
+
+Security-first mode.
 
 ```python
 if semantic_score >= semantic_threshold or classifier_score >= classifier_threshold:
@@ -200,32 +229,277 @@ else:
     NORMAL
 ```
 
+Best for:
+
+* strict environments
+* low false negatives
+
 ---
 
-### Option 2 — Weighted Fusion
+## Option 2 — Weighted Fusion
+
+Balanced mode.
 
 ```python
 fusion_score = semantic_weight * semantic_score + classifier_weight * classifier_score
 ```
 
+Best for:
+
+* balanced security
+* tunable sensitivity
+
 ---
 
-### Option 3 — Single Signal
+## Option 3 — Single Signal
 
-Use either:
+Choose one:
 
 * semantic only
-  or
 * classifier only
+
+Useful for benchmarking or lightweight deployments.
+
+---
+
+# Training Pipeline
+
+Training consists of 2 stages.
+
+---
+
+## Stage 1 — Encoder Training
+
+The encoder is trained using similarity learning.
+
+Goal:
+
+* similar attacks cluster together
+* similar normal prompts cluster together
+* attacks and normal prompts separate clearly
+
+Loss:
+
+```text
+CosineEmbeddingLoss
+```
+
+---
+
+## Stage 2 — Classifier Training
+
+After encoder training:
+
+* embeddings are extracted
+* classifier head is trained on embeddings
+
+Loss:
+
+```text
+BCEWithLogitsLoss
+```
+
+Outputs:
+
+* trained encoder
+* trained classifier
+* attack embedding bank
+* normal embedding bank
+
+---
+
+# Training Command
+
+```bash
+python training_final.py \
+  --train /home/asimyil/train.jsonl \
+  --output-dir /home/asimyil/HomayShield_v5
+```
+
+---
+
+# Training Dataset
+
+HomayShield was trained using a large dataset of:
+
+* benign prompts
+* adversarial prompts
+* Turkish prompts
+* English prompts
+* mixed-language prompts
+
+Dataset includes attack categories such as:
+
+* Direct prompt injection
+* Jailbreak attacks
+* Instruction override
+* Prompt leakage
+* Data exfiltration
+* Obfuscation attacks
+* Multi-turn attacks
+* Roleplay attacks
+* Tool abuse
+* Code injection
+* Long context attacks
+* Hard negative samples
+
+This helps improve detection robustness in real-world enterprise environments.
+
+---
+
+# Training Dataset Format
+
+JSONL example:
+
+```json
+{"text":"normal request","label":"NORMAL"}
+{"text":"ignore previous instructions","label":"ATTACK"}
+```
+
+---
+
+# Generated Files
+
+Training produces:
+
+```text
+homayshield_encoder.pt
+homayshield_classifier.pt
+homayshield_attack_bank.npy
+homayshield_normal_bank.npy
+```
+
+---
+
+# Hugging Face Artifacts
+
+Pretrained artifacts will be shared on Hugging Face.
+
+## Encoder
+
+HF_ENCODER_URL
+
+## Classifier
+
+HF_CLASSIFIER_URL
+
+## Attack Embeddings
+
+HF_ATTACK_BANK_URL
+
+---
+
+# Inference Commands
+
+## Option 1 — OR Logic
+
+```bash
+python inference_hybrid.py \
+  --input test.jsonl \
+  --output pred.jsonl \
+  --encoder homayshield_encoder.pt \
+  --classifier homayshield_classifier.pt \
+  --attack-embeddings homayshield_attack_bank.npy \
+  --mode or \
+  --semantic-threshold 0.92 \
+  --classifier-threshold 0.80
+```
+
+---
+
+## Option 2 — Weighted Fusion
+
+```bash
+python inference_hybrid.py \
+  --input test.jsonl \
+  --output pred.jsonl \
+  --encoder homayshield_encoder.pt \
+  --classifier homayshield_classifier.pt \
+  --attack-embeddings homayshield_attack_bank.npy \
+  --mode fusion \
+  --semantic-weight 0.4 \
+  --classifier-weight 0.6 \
+  --fusion-threshold 0.75
+```
+
+---
+
+## Option 3A — Semantic Only
+
+```bash
+python inference_hybrid.py \
+  --input test.jsonl \
+  --output pred.jsonl \
+  --encoder homayshield_encoder.pt \
+  --classifier homayshield_classifier.pt \
+  --attack-embeddings homayshield_attack_bank.npy \
+  --mode semantic_only \
+  --semantic-threshold 0.92
+```
+
+---
+
+## Option 3B — Classifier Only
+
+```bash
+python inference_hybrid.py \
+  --input test.jsonl \
+  --output pred.jsonl \
+  --encoder homayshield_encoder.pt \
+  --classifier homayshield_classifier.pt \
+  --attack-embeddings homayshield_attack_bank.npy \
+  --mode classifier_only \
+  --classifier-threshold 0.80
+```
+
+---
+
+# Use Cases
+
+HomayShield can be used for:
+
+* LLM guardrails
+* Prompt injection detection
+* Jailbreak prevention
+* Adversarial prompt detection
+* AI chatbot protection
+* SOC automation
+* Enterprise AI security
+
+---
+
+# Future Work
+
+Planned improvements:
+
+* ONNX export
+* Quantized inference
+* Distilled encoder versions
+* Faster CPU optimization
+* Extended multilingual support
+* Real-time streaming inference
+* Optional LLM fallback for high-risk prompts
 
 ---
 
 # Key Philosophy
 
-HomayShield is built around one belief:
+HomayShield is built around one core belief:
 
-> Security should not be limited to companies with GPU infrastructure.
+> AI security should not be limited to organizations with GPU infrastructure.
 
-AI security should be practical, deployable, and accessible.
+Security should be:
 
-Even without LLMs, strong CPU-based guardrails can provide meaningful protection.
+* practical
+* deployable
+* efficient
+* accessible
+
+Even without LLMs, optimized CPU-based guardrails can provide meaningful protection for real-world AI systems.
+
+---
+
+# Author
+
+**ASIM YILDIZ**
+Security Researcher | Incident Response | AI & Security Engineering
